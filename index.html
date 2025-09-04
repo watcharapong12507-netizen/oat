@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Care App</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f2f9f1;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4c82af;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        main {
+            padding: 20px;
+        }
+        section {
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #4c82af;
+        }
+        h3 {
+            color: #555; /* Darker grey for subheadings */
+            margin-top: 10px;
+        }
+        button {
+            background-color: #4c82af;
+            color: white;
+            border: none;
+            padding: 10px 15px; /* Adjusted padding for consistency */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em; /* Adjusted font size */
+            margin-right: 5px;
+            margin-top: 5px; /* Added margin top for spacing */
+        }
+        button:hover {
+            background-color: #4c82af;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        button.danger:hover {
+            background-color: #da190b;
+        }
+        button.small { /* For delete buttons in list */
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        input, textarea, select { /* Added select to this rule */
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #knowledgeContent {
+            margin-top: 15px;
+            padding-left: 10px;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #eee;
+            margin-top: 30px;
+        }
+
+        /* Styles for the log table */
+        #logTableContainer {
+           overflow-x: auto;
+        }
+        #healthLogTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        #healthLogTable th, #healthLogTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        #healthLogTable th {
+            background-color: #4c82af;
+            color: white;
+        }
+        #healthLogTable tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        #healthLogTable tr:hover {
+            background-color: #f1f1f1;
+        }
+        .no-data-message {
+            text-align: center;
+            padding: 10px;
+            color: #777;
+        }
+
+        /* Styles for Notification System */
+        #setReminderForm div {
+            margin-bottom: 10px;
+        }
+        #remindersList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #remindersList li {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow items to wrap on small screens */
+        }
+        #remindersList li span {
+            flex-grow: 1;
+            margin-right: 10px; /* Space before delete button */
+        }
+        .reminder-details {
+            font-size: 0.9em;
+            color: #333;
+        }
+        .reminder-details strong {
+            color: #4c82af;
+        }
+        /* Styles for Chart */
+        #bloodSugarChartContainer {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fff;
+            display: none; /* Hidden by default */
+        }
+        #noGraphDataMessage {
+            text-align: center;
+            padding: 10px;
+            color: #777;
+            display: none; /* Hidden by default */
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Diabetes Care App</h1>
+    <p>เครื่องมืออำนวยความสะดวกสำหรับผู้ป่วยโรคเบาหวาน</p>
+</header>
+
+<main>
+    <section>
+        <h2>บันทึกข้อมูลสุขภาพ</h2>
+        <form id="healthDataForm">
+            <label for="bloodSugar">ระดับน้ำตาลในเลือด (mg/dL):</label>
+            <input type="number" id="bloodSugar" name="bloodSugar" placeholder="กรอกค่า">
+
+            <label for="medication">ปริมาณยา/อินซูลิน:</label>
+            <input type="text" id="medication" name="medication" placeholder="กรอกข้อมูลยา เช่น 'Metformin 500mg', 'อินซูลิน 10 units'">
+
+            <label for="foodIntake">อาหารที่รับประทาน:</label>
+            <textarea id="foodIntake" name="foodIntake" placeholder="กรอกรายละเอียดอาหารที่รับประทานในแต่ละมื้อ"></textarea>
+
+            <label for="exerciseDone">การออกกำลังกาย:</label>
+            <textarea id="exerciseDone" name="exerciseDone" placeholder="กรอกรายละเอียดการออกกำลังกาย เช่น 'เดิน 30 นาที', 'โยคะ 1 ชั่วโมง'"></textarea>
+
+            <button type="submit">บันทึกข้อมูล</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>ประวัติการบันทึกข้อมูลสุขภาพ</h2>
+        <button id="toggleLogButton">แสดงประวัติการบันทึก</button>
+        <button id="clearLogButton" class="danger" style="display:none;">ล้างประวัติทั้งหมด</button>
+        <div id="logTableContainer" style="display:none; margin-top: 15px;">
+            <table id="healthLogTable">
+                <thead>
+                    <tr>
+                        <th>วันที่/เวลา</th>
+                        <th>ระดับน้ำตาล (mg/dL)</th>
+                        <th>ยา/อินซูลิน</th>
+                        <th>อาหารที่รับประทาน</th>
+                        <th>การออกกำลังกาย</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                </tbody>
+            </table>
+            <p id="noDataMessage" class="no-data-message" style="display:none;">ยังไม่มีข้อมูลที่บันทึกไว้</p>
+        </div>
+    </section>
+
+    <section id="notificationSection">
+        <h2>ระบบแจ้งเตือน</h2>
+    
+        <div id="setReminderForm">
+            <h3>ตั้งค่าการแจ้งเตือนใหม่</h3>
+            <div>
+                <label for="reminderType">ประเภทการแจ้งเตือน:</label>
+                <select id="reminderType" name="reminderType">
+                    <option value="ตรวจระดับน้ำตาล">ตรวจระดับน้ำตาล</option>
+                    <option value="รับประทานยา">รับประทานยา/ฉีดอินซูลิน</option>
+                    <option value="ออกกำลังกาย">ออกกำลังกาย</option>
+                    <option value="นัดหมายแพทย์">นัดหมายแพทย์</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+            </div>
+    
+            <div>
+                <label for="reminderTime">เวลา (HH:MM):</label>
+                <input type="time" id="reminderTime" name="reminderTime">
+            </div>
+    
+            <div>
+                <label for="reminderDate">วันที่ (สำหรับการแจ้งเตือนครั้งเดียว, เว้นว่างถ้าต้องการแจ้งเตือนทุกวันตามเวลา):</label>
+                <input type="date" id="reminderDate" name="reminderDate">
+            </div>
+            
+            <div>
+                <label for="reminderMessage">ข้อความแจ้งเตือนเพิ่มเติม (ถ้ามี):</label>
+                <input type="text" id="reminderMessage" name="reminderMessage" placeholder="เช่น 'วัดน้ำตาลก่อนอาหารเช้า'">
+            </div>
+    
+            <button type="button" id="addReminderButton">เพิ่มการแจ้งเตือน</button>
+        </div>
+    
+        <div id="activeReminders" style="margin-top: 20px;">
+            <h3>การแจ้งเตือนที่ตั้งไว้</h3>
+            <ul id="remindersList">
+                </ul>
+            <p id="noRemindersMessage" class="no-data-message" style="display:block;">ยังไม่มีการแจ้งเตือนที่ตั้งไว้</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>สรุปผลและการวิเคราะห์</h2>
+        <p>ดูกราฟและแนวโน้มจากพฤติกรรมสุขภาพของคุณ</p>
+        <button id="toggleGraphButton">แสดงกราฟระดับน้ำตาล</button>   
+        <div id="bloodSugarChartContainer">
+            <canvas id="bloodSugarChart"></canvas>
+            <p id="noGraphDataMessage" class="no-data-message">ยังไม่มีข้อมูลระดับน้ำตาลในเลือดสำหรับแสดงกราฟ</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>เสริมสร้างความรู้และวินัย</h2>
+        <p>เรียนรู้เพิ่มเติมเกี่ยวกับการดูแลตนเองและการควบคุมโรคเบาหวาน</p>
+        <button onclick="showKnowledge()">ดูคำแนะนำสำหรับคนที่เป็นเบาหวาน</button>
+        <div id="knowledgeContent" style="display:none;">
+            1.  **ควบคุมระดับน้ำตาลในเลือด**
+    1.1 **ตรวจน้ำตาลในเลือด:** ควรตรวจวัดระดับน้ำตาลในเลือดตามคำแนะนำของแพทย์ เช่น ก่อนอาหารและหลังอาหาร 2 ชั่วโมง เพื่อให้รู้ว่าระดับน้ำตาลอยู่ในเกณฑ์ที่ควบคุมได้หรือไม่
+    1.2 **ใช้ยาและอินซูลินตามคำแนะนำ:** ปฏิบัติตามแผนการรักษาของแพทย์อย่างเคร่งครัด โดยไม่ข้ามการใช้ยา หรือการฉีดอินซูลิน เพื่อให้ระดับน้ำตาลในเลือดคงที่
+
+2.  **ควบคุมอาหาร**
+    การควบคุมอาหารเป็นสิ่งสำคัญมากในการจัดการเบาหวาน:
+    2.1 **ทานอาหารที่มีคาร์โบไฮเดรตเชิงซ้อน:** เช่น ข้าวกล้อง ขนมปังโฮลวีต หรือพืชผักต่าง ๆ ที่มีเส้นใยสูง เพราะจะช่วยควบคุมระดับน้ำตาลในเลือดได้ดี
+    2.2 **ควบคุมปริมาณน้ำตาลและแป้ง:** หลีกเลี่ยงอาหารหวาน หรือแป้งขัดขาว เช่น ข้าวขาว ขนมหวาน และเครื่องดื่มที่มีน้ำตาลสูง
+    2.3 **แบ่งมื้ออาหารเป็นมื้อเล็ก ๆ:** ทานอาหาร 3 มื้อหลักและ 2-3 มื้อย่อยระหว่างวัน เพื่อลดการขึ้นสูงของระดับน้ำตาลหลังอาหาร
+    2.4 **ทานโปรตีนและไขมันที่ดีต่อสุขภาพ:** เช่น ปลา ไก่ไม่ติดมัน ถั่ว และน้ำมันมะกอก เพราะโปรตีนและไขมันสามารถช่วยให้อิ่มท้องและควบคุมระดับน้ำตาลได้ดี
+
+3.  **ออกกำลังกายเป็นประจำ**
+    การออกกำลังกายช่วยเพิ่มประสิทธิภาพในการใช้กลูโคสของร่างกาย และช่วยลดระดับน้ำตาลในเลือด
+    3.1 แนะนำการออกกำลังกายอย่างน้อย 30 นาทีต่อวัน 5 วันต่อสัปดาห์ เช่น การเดินเร็ว ว่ายน้ำ ปั่นจักรยาน หรือโยคะ
+    3.2 หากคุณมีปัญหาทางการเคลื่อนไหว เช่น อาการปวดข้อ ควรปรึกษาแพทย์เพื่อหากิจกรรมที่เหมาะสมกับสภาพร่างกาย
+
+4.  **ติดตามสุขภาพอย่างสม่ำเสมอ**
+    ตรวจค่าน้ำตาลในเลือดและ HbA1c: ค่า HbA1c จะบ่งบอกถึงการควบคุมระดับน้ำตาลในเลือดในช่วง 2-3 เดือนที่ผ่านมา ค่าที่เหมาะสมสำหรับผู้ป่วยเบาหวานควรอยู่ระหว่าง 6.5% - 7%
+    4.1 **ตรวจความดันโลหิตและคอเลสเตอรอล:** ผู้ป่วยเบาหวานมักมีความเสี่ยงสูงในการเกิดโรคหัวใจ ดังนั้นการควบคุมความดันโลหิตและระดับคอเลสเตอรอลก็มีความสำคัญ
+    4.2 **ตรวจสุขภาพตาและไต:** เบาหวานสามารถทำให้เกิดภาวะเบาหวานขึ้นตา (Retinopathy) หรือโรคไต (Nephropathy) ได้ จึงควรไปตรวจสม่ำเสมอ
+
+5.  **ลดความเครียด**
+    ความเครียดสามารถส่งผลให้ระดับน้ำตาลในเลือดสูงขึ้นได้ การหาวิธีจัดการกับความเครียด เช่น การฝึกหายใจลึก การทำสมาธิ หรือการทำกิจกรรมที่ช่วยผ่อนคลาย เช่น ฟังเพลงหรือการเดินเล่น จะช่วยลดผลกระทบที่มีต่อร่างกาย
+
+6.  **การนอนหลับที่เพียงพอ**
+    การนอนหลับไม่เพียงพอสามารถทำให้ระดับน้ำตาลในเลือดสูงขึ้นได้ ผู้ป่วยเบาหวานควรนอนหลับให้เพียงพอ (ประมาณ 7-9 ชั่วโมง) และพยายามรักษาตารางนอนที่สม่ำเสมอ
+
+7.  **การรับการดูแลจากทีมแพทย์**
+    7.1 **พบแพทย์และผู้เชี่ยวชาญ:** ควรมีการพบแพทย์ประจำ เพื่อปรับการรักษาตามสถานการณ์และผลการตรวจต่าง ๆ
+    7.2 **พบผู้เชี่ยวชาญด้านโภชนาการ:** หากมีปัญหาเกี่ยวกับการควบคุมอาหาร ควรปรึกษานักโภชนาการเพื่อวางแผนการรับประทานอาหารที่เหมาะสม
+    7.3 **การติดตามผลร่วมกับแพทย์:** หากมีการเปลี่ยนแปลงในยาหรือการรักษา ควรได้รับคำแนะนำจากแพทย์เพื่อความปลอดภัย
+
+8.  **ทำความเข้าใจและให้ความรู้กับตนเอง**
+    การเข้าใจเกี่ยวกับโรคเบาหวาน และวิธีการจัดการมันอย่างถูกต้องจะช่วยให้ผู้ป่วยมีความมั่นใจในการดูแลสุขภาพของตนเอง ดังนั้น ควรศึกษาข้อมูลจากแหล่งที่น่าเชื่อถือ หรือร่วมกลุ่มสนับสนุนผู้ป่วยเบาหวานเพื่อแลกเปลี่ยนประสบการณ์
+        </div>
+    </section>
+</main>
+
+<footer>
+    &copy; 2025 Diabetes Care App | สนับสนุนนโยบายสาธารณสุขเพื่อสุขภาพที่ดี
+</footer>
+
+<script>
+    // --- Health Log System (from previous step) ---
+    let healthLog = [];
+    const healthDataFormEl = document.getElementById('healthDataForm'); // Renamed to avoid conflict
+    const logTableBody = document.getElementById('logTableBody');
+    const logTableContainer = document.getElementById('logTableContainer');
+    const toggleLogButton = document.getElementById('toggleLogButton');
+    const clearLogButton = document.getElementById('clearLogButton');
+    const noDataMessage = document.getElementById('noDataMessage');
+
+    function renderLogTable() {
+        logTableBody.innerHTML = '';
+        if (healthLog.length === 0) {
+            noDataMessage.style.display = 'block';
+            logTableBody.style.display = 'none';
+        } else {
+            noDataMessage.style.display = 'none';
+            logTableBody.style.display = '';
+            healthLog.forEach(entry => {
+                const row = logTableBody.insertRow();
+                row.insertCell().textContent = entry.timestamp;
+                row.insertCell().textContent = entry.bloodSugar;
+                row.insertCell().textContent = entry.medication;
+                row.insertCell().textContent = entry.foodIntake;
+                row.insertCell().textContent = entry.exerciseDone;
+            });
+        }
+    }
+    function saveLogToLocalStorage() {
+        localStorage.setItem('diabetesHealthLog', JSON.stringify(healthLog));
+    }
+    function loadLogFromLocalStorage() {
+        const storedLog = localStorage.getItem('diabetesHealthLog');
+        if (storedLog) { healthLog = JSON.parse(storedLog); }
+    }
+    function toggleLogTable() {
+        const isHidden = logTableContainer.style.display === 'none' || logTableContainer.style.display === '';
+        if (isHidden) {
+            logTableContainer.style.display = 'block';
+            toggleLogButton.textContent = 'ซ่อนประวัติการบันทึก';
+            clearLogButton.style.display = 'inline-block';
+            renderLogTable();
+        } else {
+            logTableContainer.style.display = 'none';
+            toggleLogButton.textContent = 'แสดงประวัติการบันทึก';
+            clearLogButton.style.display = 'none';
+        }
+    }
+    function clearAllLogs() {
+        if (confirm('คุณต้องการล้างประวัติการบันทึกทั้งหมดใช่หรือไม่? ข้อมูลจะไม่สามารถกู้คืนได้')) {
+            healthLog = [];
+            saveLogToLocalStorage();
+            renderLogTable();
+            if (logTableContainer.style.display === 'block') {
+                noDataMessage.style.display = 'block';
+                logTableBody.style.display = 'none';
+            }
+            // Also update the graph if it's visible
+            if (bloodSugarChartContainer.style.display === 'block') {
+                renderBloodSugarChart();
+            }
+        }
+    }
+    if (healthDataFormEl) {
+        healthDataFormEl.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const bloodSugar = document.getElementById('bloodSugar').value;
+            const medication = document.getElementById('medication').value;
+            const foodIntake = document.getElementById('foodIntake').value;
+            const exerciseDone = document.getElementById('exerciseDone').value;
+            if (!bloodSugar && !medication && !foodIntake && !exerciseDone) {
+                alert('กรุณากรอกข้อมูลสุขภาพอย่างน้อยหนึ่งรายการ'); return;
+            }
+            const newEntry = {
+                timestamp: new Date().toLocaleString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                bloodSugar: bloodSugar || 'N/A', medication: medication || 'N/A',
+                foodIntake: foodIntake || 'N/A', exerciseDone: exerciseDone || 'N/A'
+            };
+            healthLog.push(newEntry);
+            saveLogToLocalStorage(); 
+            renderLogTable();
+            // If the graph is currently visible, re-render it with new data
+            if (bloodSugarChartContainer.style.display === 'block') {
+                renderBloodSugarChart();
+            }
+            alert('บันทึกข้อมูลเรียบร้อยแล้ว!'); this.reset();
+        });
+    }
+    if (toggleLogButton) { toggleLogButton.addEventListener('click', toggleLogTable); }
+    if (clearLogButton) { clearLogButton.addEventListener('click', clearAllLogs); }
+
+    // --- Knowledge Panel ---
+    function showKnowledge() {
+        var content = document.getElementById('knowledgeContent');
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // --- Notification System ---
+    let reminders = [];
+    const reminderTypeEl = document.getElementById('reminderType');
+    const reminderTimeEl = document.getElementById('reminderTime');
+    const reminderDateEl = document.getElementById('reminderDate');
+    const reminderMessageEl = document.getElementById('reminderMessage');
+    const addReminderButton = document.getElementById('addReminderButton');
+    const remindersListULEl = document.getElementById('remindersList');
+    const noRemindersMessageEl = document.getElementById('noRemindersMessage');
+
+    function saveRemindersToLocalStorage() {
+        localStorage.setItem('diabetesReminders', JSON.stringify(reminders));
+    }
+
+    function loadRemindersFromLocalStorage() {
+        const storedReminders = localStorage.getItem('diabetesReminders');
+        if (storedReminders) {
+            reminders = JSON.parse(storedReminders);
+        }
+    }
+
+    function renderRemindersList() {
+        remindersListULEl.innerHTML = '';
+        if (reminders.length === 0) {
+            noRemindersMessageEl.style.display = 'block';
+            return;
+        }
+        noRemindersMessageEl.style.display = 'none';
+
+        reminders.forEach(reminder => {
+            const li = document.createElement('li');
+            let displayText = `<span class="reminder-details"><strong>${reminder.type}</strong>: ${reminder.customMessage || 'ตามเวลา'}`;
+            displayText += ` เวลา: ${reminder.time}`;
+            if (reminder.date) {
+                const formattedDate = new Date(reminder.date + 'T00:00:00').toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                displayText += ` วันที่: ${formattedDate}`;
+            } else {
+                displayText += " (ทุกวัน)";
+            }
+            displayText += reminder.isTriggeredOnce ? " (แจ้งเตือนแล้ว)" : "";
+            displayText += `</span>`;
+            
+            li.innerHTML = `${displayText} <button class="danger small delete-reminder" data-id="${reminder.id}">ลบ</button>`;
+            if (reminder.isTriggeredOnce && reminder.date) { // Visually distinguish triggered one-time alarms
+                li.style.opacity = "0.6";
+            }
+            remindersListULEl.appendChild(li);
+        });
+
+        document.querySelectorAll('.delete-reminder').forEach(button => {
+            button.addEventListener('click', function() {
+                deleteReminder(this.dataset.id);
+            });
+        });
+    }
+    
+    function addReminderHandler() {
+        const type = reminderTypeEl.value;
+        const time = reminderTimeEl.value;
+        const date = reminderDateEl.value; // Will be empty string if not set
+        const customMessage = reminderMessageEl.value.trim();
+
+        if (!time) {
+            alert("กรุณาระบุเวลาสำหรับการแจ้งเตือน");
+            return;
+        }
+        // Validate that date is not in the past if it's a one-time reminder
+        if (date) {
+            const reminderDateTime = new Date(`${date}T${time}:00`); // Assuming time is HH:MM
+            const now = new Date();
+            // Set 'now' to start of today for date comparison to allow current day reminders
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            if (reminderDateTime < todayStart) {
+                alert("ไม่สามารถตั้งการแจ้งเตือนสำหรับวันที่หรือเวลาที่ผ่านไปแล้วได้");
+                return;
+            }
+        }
+
+        const newReminder = {
+            id: Date.now().toString(), // Unique ID
+            type: type,
+            time: time, // HH:MM
+            date: date, // YYYY-MM-DD or empty
+            customMessage: customMessage || `ถึงเวลา ${type}`,
+            lastTriggeredDate: null, // YYYY-MM-DD string for daily checks
+            isTriggeredOnce: false // For one-time alarms
+        };
+
+        reminders.push(newReminder);
+        saveRemindersToLocalStorage();
+        renderRemindersList();
+        
+        // Reset form fields
+        reminderTimeEl.value = '';
+        reminderDateEl.value = '';
+        reminderMessageEl.value = '';
+        // reminderTypeEl.value = reminderTypeEl.options[0].value; // Reset to first option
+        alert("เพิ่มการแจ้งเตือนเรียบร้อยแล้ว");
+    }
+
+    function deleteReminder(id) {
+        reminders = reminders.filter(r => r.id !== id);
+        saveRemindersToLocalStorage();
+        renderRemindersList();
+    }
+
+    function checkAndTriggerReminders() {
+        const now = new Date();
+        const todayDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        const currentTimeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        let remindersStateChanged = false;
+
+        reminders.forEach(reminder => {
+            if (reminder.date) { // One-time reminder
+                // Ensure date is in the future or current day for trigger, and time matches
+                const reminderDateTime = new Date(`${reminder.date}T${reminder.time}:00`);
+                if (!reminder.isTriggeredOnce && reminder.date === todayDateStr && reminder.time === currentTimeStr) {
+                    // Give a small buffer to avoid missing the exact minute
+                    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                    const reminderMinutes = parseInt(reminder.time.split(':')[0]) * 60 + parseInt(reminder.time.split(':')[1]);
+                    if (Math.abs(nowMinutes - reminderMinutes) <= 0) { // Trigger if within the same minute or very close
+                        triggerAlarm(reminder);
+                        reminder.isTriggeredOnce = true;
+                        remindersStateChanged = true;
+                    }
+                }
+            } else { // Daily recurring reminder
+                if (reminder.time === currentTimeStr) {
+                    if (reminder.lastTriggeredDate !== todayDateStr) {
+                        triggerAlarm(reminder);
+                        reminder.lastTriggeredDate = todayDateStr; // Record that it triggered today
+                        remindersStateChanged = true;
+                    }
+                }
+            }
+        });
+
+        if (remindersStateChanged) {
+            saveRemindersToLocalStorage();
+            renderRemindersList(); // Re-render if a state changed (e.g., isTriggeredOnce)
+        }
+    }
+
+    function triggerAlarm(reminder) {
+        let alertMessage = `🔔 แจ้งเตือน: ${reminder.type} 🔔\n`;
+        alertMessage += `ข้อความ: ${reminder.customMessage}\n`;
+        alertMessage += `เวลา: ${reminder.time}`;
+        if (reminder.date) {
+            const formattedDate = new Date(reminder.date + 'T00:00:00').toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            alertMessage += ` วันที่: ${formattedDate}`;
+        }
+        alert(alertMessage);
+        console.log("Triggered alarm:", reminder);
+    }
+
+    if (addReminderButton) {
+        addReminderButton.addEventListener('click', addReminderHandler);
+    }
+    
+    // --- Chart System ---
+    let bloodSugarChartInstance = null; // To store the Chart.js instance
+    const bloodSugarChartCanvas = document.getElementById('bloodSugarChart');
+    const bloodSugarChartContainer = document.getElementById('bloodSugarChartContainer');
+    const toggleGraphButton = document.getElementById('toggleGraphButton');
+    const noGraphDataMessage = document.getElementById('noGraphDataMessage');
+
+    function renderBloodSugarChart() {
+        const bloodSugarData = healthLog.filter(entry => !isNaN(parseFloat(entry.bloodSugar)) && entry.bloodSugar !== null && entry.bloodSugar !== '');
+
+        if (bloodSugarData.length === 0) {
+            if (bloodSugarChartInstance) {
+                bloodSugarChartInstance.destroy();
+                bloodSugarChartInstance = null;
+            }
+            bloodSugarChartCanvas.style.display = 'none';
+            noGraphDataMessage.style.display = 'block';
+            return;
+        }
+
+        bloodSugarChartCanvas.style.display = 'block';
+        noGraphDataMessage.style.display = 'none';
+
+        const labels = bloodSugarData.map(entry => entry.timestamp);
+        const dataValues = bloodSugarData.map(entry => parseFloat(entry.bloodSugar));
+
+        if (bloodSugarChartInstance) {
+            bloodSugarChartInstance.destroy(); // Destroy previous chart instance
+        }
+
+        bloodSugarChartInstance = new Chart(bloodSugarChartCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'ระดับน้ำตาลในเลือด (mg/dL)',
+                    data: dataValues,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'วันที่และเวลา'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'ระดับน้ำตาลในเลือด (mg/dL)'
+                        },
+                        beginAtZero: false // Blood sugar might not start at zero
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'แนวโน้มระดับน้ำตาลในเลือด',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' mg/dL';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function toggleBloodSugarGraph() {
+        const isHidden = bloodSugarChartContainer.style.display === 'none';
+        if (isHidden) {
+            bloodSugarChartContainer.style.display = 'block';
+            toggleGraphButton.textContent = 'ซ่อนกราฟระดับน้ำตาล';
+            renderBloodSugarChart(); // Render the chart when showing
+        } else {
+            bloodSugarChartContainer.style.display = 'none';
+            toggleGraphButton.textContent = 'แสดงกราฟระดับน้ำตาล';
+            if (bloodSugarChartInstance) {
+                bloodSugarChartInstance.destroy(); // Destroy chart when hiding
+                bloodSugarChartInstance = null;
+            }
+        }
+    }
+
+    if (toggleGraphButton) {
+        toggleGraphButton.addEventListener('click', toggleBloodSugarGraph);
+    }
+
+
+    // Initialize all systems on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+        // Health Log
+        loadLogFromLocalStorage();
+        // renderLogTable(); // Only render if toggled visible, toggleLogTable handles this
+
+        // Reminders
+        loadRemindersFromLocalStorage();
+        renderRemindersList();
+        setInterval(checkAndTriggerReminders, 20000); // Check every 20 seconds
+    });
+
+</script>
+</body>
+</html>
