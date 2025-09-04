@@ -555,6 +555,7 @@
 
     function triggerAlarm(reminder) {
         let alertMessage = `🔔 แจ้งเตือน: ${reminder.type} 🔔\n`;
+        <audio id="notifySound" src="lo-fi-alarm-clock-243766.mp3" preload="auto"></audio>;
         alertMessage += `ข้อความ: ${reminder.customMessage}\n`;
         alertMessage += `เวลา: ${reminder.time}`;
         if (reminder.date) {
